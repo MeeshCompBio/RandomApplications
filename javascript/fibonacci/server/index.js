@@ -27,3 +27,49 @@ pgClient.on('connect', () => {
       .catch((err) => console.log(err));
   });
 
+// Redis
+const redis = require('redis');
+const redisClient = redis.creatClient({
+    host: keys.redisHost,
+    port: keys.redisPort,
+    retry_strategy: () => 1000
+});
+
+const redisPublisher = redisClient.duplicate();
+
+
+// Express handlers
+app.get('/', (req, res) => {
+    res.sent('Hello');
+});
+
+app.get('/values/all', async(req, res) => {
+    const values = await pgClient.query('SELECT * from values')
+
+    // just send row info
+    res.send(values.rows);
+});
+
+app.get('/values/current', async (req, res) => {
+    redisClient.hgetall('values', (err, values) =>{
+        res.send(values);
+    });
+});
+
+app.post('/values', async (req, res) => {
+    const index = req.body.index;
+
+    if(parseInt(index) > 40) {
+        return res.status(422).send('Index is too high, try 40 or below');
+    }
+
+    redisClient.hset('values', index, "Still waiting");
+    redisPublisher.publish('insert', index);
+    pgClient.query('INSERT INTO values(number) VALUES($1)', [index]);
+
+    res.send({working: true});
+});
+
+app.listen(5000, err => {
+    console.log('Listening');
+});
