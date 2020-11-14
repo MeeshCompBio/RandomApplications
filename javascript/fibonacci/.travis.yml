@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t meeshcompbio/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true meeshcompbio/react-test npm test
+
+after_success:
+  - docker build -t meeshcompbio/multi-client ./client
+  - docker build -t meeshcompbio/multi-nginx ./nginx
+  - docker build -t meeshcompbio/multi-server ./server
+  - docker build -t meeshcompbio/multi-worker ./worker
+
+  # Log into docker hub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # push to hub
+  - docker push meeshcompbio/multi-client
+  - docker push meeshcompbio/multi-nginx 
+  - docker push meeshcompbio/multi-server
+  - docker push meeshcompbio/multi-worker
