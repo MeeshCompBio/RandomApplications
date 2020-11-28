@@ -8,10 +8,10 @@ metadata:
 spec:
   containers:
   - name: fibonacci
-    image: stephengrider/multi-client
+    image: stephengrider/multi-worker
     resources:
       limits:
         memory: "128Mi"
         cpu: "500m"
     ports:
-      - containerPort: 3000
+      - containerPort: 9999
