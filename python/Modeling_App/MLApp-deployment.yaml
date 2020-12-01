@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlapp-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: MLApp
+  template:
+    metadata:
+      labels:
+        component: MLApp
+    spec:
+      containers:
+      - name: mlapp-api
+        image: meeshcompbio/modelingapp
+        ports:
+        - containerPort: 3888
